@@ -1,0 +1,228 @@
+testbed:
+  name: NetworkAutomation3
+
+
+devices:
+  UbuntuServer:
+    os: linux
+    type: linux
+    custom:
+      role: container
+    connections:
+      ssh:
+        class: lib.connectors.ssh_conn.SSHConnection
+        protocol: ssh
+        ip: 192.168.200.254
+        port: 22
+        credentials:
+          login:
+            username: osboxes
+            password: osboxes.org
+
+  IOU1:
+    os: ios
+    type: router
+    custom:
+      role: router
+      domain: example.com
+    credentials:
+      enable:
+        password: pynet3
+    connections:
+      telnet:
+        class: lib.connectors.async_telnet_conn.TelnetConnection
+        protocol: telnet
+        ip: 92.81.55.146
+        port: 5021
+        credentials:
+          login:
+            username: admin
+            password: Cisco!23
+      ssh:
+        class: lib.connectors.ssh_conn.SSHConnection
+        protocol: ssh
+        ip: 192.168.200.1
+        port: 22
+        credentials:
+          login:
+            username: admin
+            password: pynet3
+
+  IOSV:
+    os: ios
+    type: router
+    custom:
+      role: router
+      hostname: IOSV
+      domain: example.com
+    credentials:
+      enable:
+        password: pynet3
+    connections:
+      telnet:
+        class: lib.connectors.async_telnet_conn.TelnetConnection
+        protocol: telnet
+        ip: 92.81.55.146
+        port: 5012
+        credentials:
+          login:
+            username: admin
+            password: Cisco!23
+      ssh:
+        class: lib.connectors.ssh_conn.SSHConnection
+        protocol: ssh
+        ip: 192.168.200.2
+        port: 22
+        credentials:
+          login:
+            username: admin
+            password: pynet3
+  CSR:
+    os: iosxe
+    type: router
+    custom:
+      role: router
+      hostname: Router
+      domain: example.com
+    credentials:
+      default:
+        username: admin
+        password: pynet3
+      enable:
+        password: pynet3
+    connections:
+      telnet:
+        class: lib.connectors.async_telnet_conn.TelnetConnection
+        protocol: telnet
+        ip: 92.81.55.146
+        port: 5039
+        credentials:
+          login:
+            username: admin
+            password: Cisco!23
+      ssh:
+        class: lib.connectors.ssh_conn.SSHConnection
+        protocol: ssh
+        ip: 192.168.200.3
+        port: 22
+        credentials:
+          login:
+            username: admin
+            password: pynet3
+      unicon:
+        class: unicon.Unicon
+        protocol: ssh
+        ip: 192.168.200.3
+        port: 22
+        ssh_options: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
+
+  FTD:
+    os: ftd
+    type: router
+    custom:
+      role: firewall
+      hostname: FTD
+      domain: example.com
+    credentials:
+      enable:
+        password: pynet3
+    connections:
+      telnet:
+        class: lib.connectors.async_telnet_conn.TelnetConnection
+        protocol: telnet
+        ip: 92.81.55.146
+        port: 5014
+        credentials:
+          login:
+            username: admin
+            password: Cisco!23
+      ssh:
+        class: lib.connectors.ssh_conn.SSHConnection
+        protocol: ssh
+        ip: 192.168.200.4
+        port: 22
+        credentials:
+          login:
+            username: admin
+            password: pynet3
+      swagger:
+        class: lib.connectors.swagger_conn.SwaggerConnector
+        protocol: https
+        ip: 192.168.200.4
+        port: 443
+
+
+
+topology:
+
+  UbuntuServer:
+    interfaces:
+      ens4:
+        type: ethernet
+        link: management
+        ipv4: 192.168.200.254/24
+
+  IOU1:
+    interfaces:
+      Ethernet0/0:
+        alias: initial
+        type: ethernet
+        link: management
+        ipv4: 192.168.200.1/24
+      Ethernet0/1:
+        type: ethernet
+        link: guest1
+        ipv4: 192.168.201.1/24
+      Ethernet0/2:
+        type: ethernet
+        link: iou_iosv
+        ipv4: 192.168.202.1/24
+
+  IOSV:
+    interfaces:
+      GigabitEthernet0/0:
+        type: ethernet
+        alias: initial
+        link: management
+        ipv4: 192.168.200.2/24
+      GigabitEthernet0/1:
+        type: ethernet
+        link: iou_iosv
+        ipv4: 192.168.202.2/24
+      GigabitEthernet0/2:
+        type: ethernet
+        link: iosv_csr
+        ipv4: 192.168.203.2/24
+  CSR:
+    interfaces:
+      GigabitEthernet1:
+        type: ethernet
+        alias: initial
+        link: management
+        ipv4: 192.168.200.3/24
+      GigabitEthernet2:
+        type: ethernet
+        link: iosv_csr
+        ipv4: 192.168.203.3/24
+      GigabitEthernet3:
+        type: ethernet
+        link: csr_ftd
+        ipv4: 192.168.204.3/24
+  FTD:
+    interfaces:
+      Management1/1:
+        type: ethernet
+        alias: initial
+        link: management
+        ipv4: 192.168.200.4/24
+      GigabitEthernet0/0:
+        type: ethernet
+        alias: outside
+        link: csr_ftd
+        ipv4: 192.168.204.4/24
+      GigabitEthernet0/1:
+        type: ethernet
+        alias: inside
+        link: ftd_ep2
+        ipv4: 192.168.205.4/24
